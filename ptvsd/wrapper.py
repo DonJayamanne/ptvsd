@@ -34,6 +34,7 @@ import _pydevd_bundle.pydevd_extension_utils as pydevd_extutil  # noqa
 import _pydevd_bundle.pydevd_frame as pydevd_frame # noqa
 #from _pydevd_bundle.pydevd_comm import pydevd_log
 from _pydevd_bundle.pydevd_additional_thread_info import PyDBAdditionalThreadInfo # noqa
+from _pydev_bundle import _pydev_imports_tipper
 
 from ptvsd import _util
 import ptvsd.ipcjson as ipcjson  # noqa
@@ -94,6 +95,13 @@ except Exception:
     def needs_unicode(value):
         return False
 
+types_mapping = dict([
+    (_pydev_imports_tipper.TYPE_IMPORT, "module"),
+    (_pydev_imports_tipper.TYPE_CLASS, "class"),
+    (_pydev_imports_tipper.TYPE_FUNCTION, "function"),
+    (_pydev_imports_tipper.TYPE_ATTR, "property"),
+    (_pydev_imports_tipper.TYPE_BUILTIN, "property"),
+    (_pydev_imports_tipper.TYPE_PARAM, "value")])
 
 class SafeReprPresentationProvider(pydevd_extapi.StrPresentationProvider):
     """
@@ -1985,6 +1993,37 @@ class VSCodeMessageProcessor(VSCLifecycleMsgProcessor):
         # updated values anyway. Doing eval on the left-hand-side
         # expression may have side-effects
         self.send_response(request, value=None)
+
+    @async_handler
+    def on_completions(self, request, args):
+        """Completions handler"""
+
+        text = args['text']
+        vsc_fid = int(args['frameId'])
+        pyd_tid, pyd_fid = self.frame_map.to_pydevd(vsc_fid)
+
+        cmd_args = (pyd_tid, pyd_fid, '', text)
+        msg = '\t'.join(str(s) for s in cmd_args)
+        _, _, resp_args = yield self.pydevd_request(
+                pydevd_comm.CMD_GET_COMPLETIONS, msg)
+        xml2 = self.parse_xml_response(resp_args)
+
+        completions = []
+        try:
+            comps = xml2.comp
+        except AttributeError:
+            comps = []
+        for item in comps:
+            try:
+                name = unquote(item['p0'])
+                doc = unquote(item['p1'])
+                args = unquote(item['p2'])
+                item_type = types_mapping.get(unquote(item['p3']), 'value')
+                completions.append({'label': name, 'type': item_type})
+            except KeyError:
+                continue
+
+        self.send_response(request, targets=completions)
 
     @async_handler
     def on_modules(self, request, args):
