@@ -5,7 +5,7 @@ import pydevd
 from ptvsd.pydevd_hooks import install
 from ptvsd.runner import run as no_debug_runner
 from ptvsd.socket import Address
-
+from ptvsd.attach_server import enable_attach_in_process
 
 ########################
 # high-level functions
@@ -19,6 +19,10 @@ def debug_main(address, name, kind, *extra, **kwargs):
 
 def run_main(address, name, kind, *extra, **kwargs):
     no_debug_runner(address, name, kind == 'module', *extra, **kwargs)
+
+
+def attach_in_process(pid, address, *extra, **kwargs):
+    enable_attach_in_process(pid, address, *extra, **kwargs)
 
 
 ########################

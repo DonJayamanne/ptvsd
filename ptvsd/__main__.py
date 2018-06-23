@@ -6,7 +6,7 @@ import argparse
 import os.path
 import sys
 
-from ptvsd._local import debug_main, run_main
+from ptvsd._local import debug_main, run_main, attach_in_process
 from ptvsd.socket import Address
 from ptvsd.version import __version__, __author__  # noqa
 
@@ -44,8 +44,8 @@ PYDEVD_FLAGS = {
 }
 
 USAGE = """
-  {0} [-h] [-V] [--nodebug] [--host HOST | --server-host HOST] --port PORT -m MODULE [arg ...]
-  {0} [-h] [-V] [--nodebug] [--host HOST | --server-host HOST] --port PORT FILENAME [arg ...]
+  {0} [-h] [-V] [--nodebug] [--attach] [--host HOST | --server-host HOST] --port PORT -m MODULE [arg ...]
+  {0} [-h] [-V] [--nodebug] [--attach] [--host HOST | --server-host HOST] --port PORT FILENAME [arg ...]
 """  # noqa
 
 
@@ -138,7 +138,7 @@ def _group_args(argv):
             skip += 1
         elif arg in PYDEVD_FLAGS:
             pydevd.append(arg)
-        elif arg == '--nodebug':
+        elif arg in ['--nodebug', '--attach']:
             supported.append(arg)
 
         # ptvsd support
@@ -169,6 +169,7 @@ def _parse_args(prog, argv):
         usage=USAGE.format(prog),
     )
     parser.add_argument('--nodebug', action='store_true')
+    parser.add_argument('--attach', action='store_true')
     host = parser.add_mutually_exclusive_group()
     host.add_argument('--host')
     host.add_argument('--server-host')
@@ -177,6 +178,7 @@ def _parse_args(prog, argv):
     target = parser.add_mutually_exclusive_group(required=True)
     target.add_argument('-m', dest='module')
     target.add_argument('filename', nargs='?')
+    target.add_argument('--pid', type=int)
 
     parser.add_argument('--single-session', action='store_true')
     parser.add_argument('-V', '--version', action='version')
@@ -211,9 +213,11 @@ def _parse_args(prog, argv):
     return args
 
 
-def main(addr, name, kind, extra=(), nodebug=False, **kwargs):
+def main(addr, name, kind, extra=(), nodebug=False, attach=False, pid=None, **kwargs):
     if nodebug:
         run_main(addr, name, kind, *extra, **kwargs)
+    elif attach:
+        attach_in_process(pid, addr)
     else:
         debug_main(addr, name, kind, *extra, **kwargs)
 
@@ -221,4 +225,5 @@ def main(addr, name, kind, extra=(), nodebug=False, **kwargs):
 if __name__ == '__main__':
     args, extra = parse_args()
     main(args.address, args.name, args.kind, extra, nodebug=args.nodebug,
+         attach=args.attach, pid=args.pid,
          singlesession=args.single_session)
