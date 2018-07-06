@@ -1,7 +1,9 @@
 import contextlib
+import signal
 import sys
 import threading
 
+from ptvsd import _util
 from ptvsd import wrapper
 from ptvsd.socket import (
     close_socket, create_server, create_client, connect, Address)
@@ -9,6 +11,8 @@ from .exit_handlers import ExitHandlers, UnsupportedSignalError
 from .session import PyDevdDebugSession
 from ._util import (
     ClosedError, NotRunningError, ignore_errors, debug, lock_wait)
+
+debug = _util.debug
 
 
 def _wait_for_user():
@@ -229,6 +233,7 @@ class DaemonBase(object):
 
     def close(self):
         """Stop all loops and release all resources."""
+        debug('close')
         with self._lock:
             if self._closed:
                 raise DaemonClosedError('already closed')
@@ -250,11 +255,13 @@ class DaemonBase(object):
                 raise RuntimeError('session already started')
 
     def _close(self):
+        debug('_stop in daemon')
         self._stop()
-
+        debug('before _sock = None in daemon')
         self._sock = None
 
     def _stop(self):
+        debug('_stop')
         with self._lock:
             if self._stopped:
                 return
@@ -269,26 +276,29 @@ class DaemonBase(object):
         self._sessionlock = None  # TODO: Call self._clear_sessionlock?
 
         # TODO: Close the server socket *before* finish the session?
-        if server is not None:
-            with ignore_errors():
-                close_socket(server)
+        # if server is not None:
+        #     with ignore_errors():
+        #         close_socket(server)
 
         # TODO: Close self._sock *before* finishing the session?
-        if self._sock is not None:
-            with ignore_errors():
-                close_socket(self._sock)
+        # if self._sock is not None:
+        #     with ignore_errors():
+        #         close_socket(self._sock)
 
     def _stop_quietly(self):
         with ignore_errors():
             self._stop()
 
     def _kill_after_single_session(self):
+        debug('_kill_after_single_session')
         if self._killonclose:
             if not self._exiting:
                 # Ensure the proc is exiting before closing socket.
                 # Note that this will trigger the atexit handler.
-                self._exiting = True
-                sys.exit(0)
+                # self._exiting = True
+                import signal
+                import os
+                os.kill(os.getpid(), signal.SIGTERM)
         else:
             try:
                 self.close()
@@ -379,6 +389,14 @@ class DaemonBase(object):
     def _install_exit_handlers(self):
         """Set the placeholder handlers."""
         self._exithandlers.install()
+        import threading
+        debug('_install_exit_handlers')
+        import os
+        debug('os.getpid()')
+        debug(os.getpid())
+        debug('threading.current_thread().name')
+        debug(threading.current_thread().name)
+        debug(threading.current_thread().ident)
 
         try:
             self._exithandlers.add_atexit_handler(self._handle_atexit)
@@ -386,6 +404,7 @@ class DaemonBase(object):
             pass
         for signum in self._exithandlers.SIGNALS:
             try:
+                debug('add signal handlers for {}'.format(signum))
                 self._exithandlers.add_signal_handler(signum,
                                                       self._handle_signal)
             except ValueError:
@@ -423,12 +442,26 @@ class DaemonBase(object):
             session.wait_until_stopped()
 
     def _handle_signal(self, signum, frame):
+        debug('handle _handle_signal')
+        debug(signum)
+        if signum == signal.SIGHUP:
+            debug('handle sighup')
+            # sys.exit(0)
+            return
+        if hasattr(self, '_handled_signal'):
+            sys.exit(0)
+            return
+        self._handled_signal = True
         debug('handling signal')
         try:
+            debug('before close')
             self.close()
+            debug('after close')
         except DaemonClosedError:
+            debug('after close error')
             pass
         if not self._exiting:
+            debug('sys.exit134')
             self._exiting = True
             sys.exit(0)
 

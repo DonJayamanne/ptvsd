@@ -2,6 +2,9 @@ import atexit
 import os
 import platform
 import signal
+from ptvsd import _util
+
+debug = _util.debug
 
 
 class AlreadyInstalledError(RuntimeError):
@@ -18,7 +21,13 @@ def kill_current_proc(signum=signal.SIGTERM):
     Note that this directly kills the process (with SIGTERM, by default)
     rather than using sys.exit().
     """
+    import threading
+    debug('threading.current_thread().name')
+    debug(threading.current_thread().name)
+    debug(threading.current_thread().ident)
     os.kill(os.getpid(), signum)
+    # import sys
+    # sys.exit(0)
 
 
 class ExitHandlers(object):
@@ -27,10 +36,11 @@ class ExitHandlers(object):
     if platform.system() == 'Windows':
         # TODO: Windows *does* support these signals:
         #  SIGABRT, SIGFPE, SIGILL, SIGINT, SIGSEGV, SIGTERM, SIGBREAK
-        SIGNALS = []
+        SIGNALS = [signal.SIGTERM]
     else:
         SIGNALS = [
-            signal.SIGHUP,
+            signal.SIGHUP, signal.SIGTERM, 
+            # signal.SIGHUP, signal.SIGTERM, signal.SIGQUIT, signal.SIGABRT, 
         ]
 
     def __init__(self):
@@ -102,7 +112,12 @@ class ExitHandlers(object):
             raise
 
     def _signal_handler(self, signum, frame):
+        with open('/Users/donjayamanne/Desktop/Development/vscode/ptvsd/log.log', 'a') as fs:
+            fs.write('\n_signal_handler {}\n'.format(signum))
+            fs.write('\n_signal_handler {}\n'.format(hasattr(self, '_signal_handlers')))
         for handle_signal in self._signal_handlers.get(signum, ()):
+            with open('/Users/donjayamanne/Desktop/Development/vscode/ptvsd/log.log', 'a') as fs:
+                fs.write('\nfound handler\n')
             handle_signal(signum, frame)
 
     def _install_atexit_handler(self):

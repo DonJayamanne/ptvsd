@@ -9,6 +9,10 @@ try:
 except ImportError:
     from urlparse import urlparse
 
+from ptvsd import _util
+
+debug = _util.debug
+
 
 try:
     ConnectionError  # noqa
@@ -176,12 +180,15 @@ def connect(sock, addr, keepalive=None):
 
 
 def shut_down(sock, how=socket.SHUT_RDWR, ignored=NOT_CONNECTED):
-    """Shut down the given socket."""
+    """Shut down the given soscket."""
+    debug('shutdown socket')
     with ignored_errno(*ignored or ()):
         sock.shutdown(how)
 
 
 def close_socket(sock):
+    debug('close_socketxxx')
+    return
     """Shutdown and close the socket."""
     try:
         shut_down(sock)

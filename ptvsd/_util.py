@@ -20,8 +20,18 @@ def debug(*msg, **kwargs):
     if tb:
         import traceback
         traceback.print_exc()
-    print(*msg, file=sys.stderr)
-    sys.stderr.flush()
+    print(*msg, file=sys.stdout)
+    sys.stdout.flush()
+    with open('/Users/donjayamanne/Desktop/Development/vscode/ptvsd/log.log', 'a') as fs:
+        try:
+            fs.write('\n')
+            fs.write(str(msg))
+            fs.write('\n')
+        except Exception:
+            fs.write('\n')
+            import traceback
+            traceback.print_exc(file=fs)
+            fs.write('\n')
 
 
 @contextlib.contextmanager
@@ -286,6 +296,7 @@ class Closeable(object):
 
     def close(self):
         """Release any owned resources and clean up."""
+        print('close this')
         with self._closedlock:
             if self._closed:
                 if self.FAIL_ON_ALREADY_CLOSED:

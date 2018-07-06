@@ -103,6 +103,8 @@ class SocketIO(object):
         content = json.dumps(payload).encode('utf-8')
         headers = ('Content-Length: {}\r\n\r\n'.format(len(content))
                    ).encode('ascii')
+        with open('/Users/donjayamanne/Desktop/Development/vscode/ptvsd/log.log', 'a') as fs:
+            fs.write(json.dumps(payload) + '\n')
         # TODO: We never actually use a logfile...
         if self.__logfile is not None:
             self.__logfile.write(content)
@@ -204,6 +206,8 @@ class SocketIO(object):
         try:
             msg = json.loads(content)
             self._receive_message(msg)
+            with open('/Users/donjayamanne/Desktop/Development/vscode/ptvsd/log.log', 'a') as fs:
+                fs.write(content + '\n')
         except ValueError:
             raise InvalidContentError('Error deserializing message content.')
         except json.decoder.JSONDecodeError:

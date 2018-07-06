@@ -31,9 +31,9 @@ from xml.sax import SAXParseException
 import _pydevd_bundle.pydevd_comm as pydevd_comm  # noqa
 import _pydevd_bundle.pydevd_extension_api as pydevd_extapi  # noqa
 import _pydevd_bundle.pydevd_extension_utils as pydevd_extutil  # noqa
-import _pydevd_bundle.pydevd_frame as pydevd_frame # noqa
+import _pydevd_bundle.pydevd_frame as pydevd_frame  # noqa
 #from _pydevd_bundle.pydevd_comm import pydevd_log
-from _pydevd_bundle.pydevd_additional_thread_info import PyDBAdditionalThreadInfo # noqa
+from _pydevd_bundle.pydevd_additional_thread_info import PyDBAdditionalThreadInfo  # noqa
 
 from ptvsd import _util
 import ptvsd.ipcjson as ipcjson  # noqa
@@ -45,12 +45,9 @@ from ptvsd.safe_repr import SafeRepr  # noqa
 from ptvsd.version import __version__  # noqa
 from ptvsd.socket import TimeoutError  # noqa
 
-
 WAIT_FOR_THREAD_FINISH_TIMEOUT = 1  # seconds
 
-
 debug = _util.debug
-
 
 #def ipcjson_trace(s):
 #    print(s)
@@ -77,6 +74,7 @@ try:
     def needs_unicode(value):
         return isinstance(value, unicode)  # noqa
 except Exception:
+
     def needs_unicode(value):
         return False
 
@@ -126,7 +124,8 @@ SafeReprPresentationProvider._instance = SafeReprPresentationProvider()
 
 # Register our presentation provider as the first item on the list,
 # so that we're in full control of presentation.
-str_handlers = pydevd_extutil.EXTENSION_MANAGER_INSTANCE.type_to_instance.setdefault(pydevd_extapi.StrPresentationProvider, [])  # noqa
+str_handlers = pydevd_extutil.EXTENSION_MANAGER_INSTANCE.type_to_instance.setdefault(
+    pydevd_extapi.StrPresentationProvider, [])  # noqa
 str_handlers.insert(0, SafeReprPresentationProvider._instance)
 
 PTVSD_DIR_PATH = os.path.dirname(os.path.abspath(__file__)) + os.path.sep
@@ -141,7 +140,6 @@ def dont_trace_ptvsd_files(file_path):
 
 
 pydevd_frame.file_tracing_filter = dont_trace_ptvsd_files
-
 
 STDLIB_PATH_PREFIXES = [os.path.normcase(sys.prefix)]
 if hasattr(sys, 'base_prefix'):
@@ -167,7 +165,6 @@ if hasattr(site, 'getsitepackages'):
 
 
 class UnsupportedPyDevdCommandError(Exception):
-
     def __init__(self, cmdid):
         msg = 'unsupported pydevd command ' + str(cmdid)
         super(UnsupportedPyDevdCommandError, self).__init__(msg)
@@ -372,11 +369,13 @@ class PydevdSocket(object):
     # In Python 2, we must unquote before we decode, because UTF-8 codepoints
     # are encoded first and then quoted as individual bytes. In Python 3,
     # however, we just get a properly UTF-8-encoded string.
-    if sys.version_info < (3,):
+    if sys.version_info < (3, ):
+
         @staticmethod
         def _decode_and_unquote(data):
             return unquote(data).decode('utf8')
     else:
+
         @staticmethod
         def _decode_and_unquote(data):
             return unquote(data.decode('utf8'))
@@ -466,7 +465,10 @@ class ExceptionsManager(object):
                 pass
         return 'unhandled'
 
-    def add_exception_break(self, exception, break_raised, break_uncaught,
+    def add_exception_break(self,
+                            exception,
+                            break_raised,
+                            break_uncaught,
                             skip_stdlib=False):
 
         notify_on_handled_exceptions = 1 if break_raised else 0
@@ -487,8 +489,7 @@ class ExceptionsManager(object):
 
         msg = 'python-{}\t{}\t{}\t{}'.format(*cmdargs)
         with self.lock:
-            self.proc.pydevd_notify(
-                pydevd_comm.CMD_ADD_EXCEPTION_BREAK, msg)
+            self.proc.pydevd_notify(pydevd_comm.CMD_ADD_EXCEPTION_BREAK, msg)
             self.exceptions[exception] = break_mode
 
     def apply_exception_options(self, exception_options, skip_stdlib=False):
@@ -497,8 +498,7 @@ class ExceptionsManager(object):
         breaks.
         """
         self.remove_all_exception_breaks()
-        pyex_options = (opt
-                        for opt in exception_options
+        pyex_options = (opt for opt in exception_options
                         if self._is_python_exception_category(opt))
         for option in pyex_options:
             exception_paths = option['path']
@@ -516,8 +516,8 @@ class ExceptionsManager(object):
                 if exception_paths[0]['names'][0] == 'Python Exceptions':
                     is_category = True
             if is_category:
-                self.add_exception_break(
-                    'BaseException', break_raised, break_uncaught, skip_stdlib)
+                self.add_exception_break('BaseException', break_raised,
+                                         break_uncaught, skip_stdlib)
             else:
                 path_iterator = iter(exception_paths)
                 # Skip the first one. It will always be the category
@@ -528,9 +528,8 @@ class ExceptionsManager(object):
                     for ex_name in path['names']:
                         exception_names.append(ex_name)
                 for exception_name in exception_names:
-                    self.add_exception_break(
-                        exception_name, break_raised,
-                        break_uncaught, skip_stdlib)
+                    self.add_exception_break(exception_name, break_raised,
+                                             break_uncaught, skip_stdlib)
 
     def _is_python_exception_category(self, option):
         """
@@ -574,6 +573,7 @@ class VariablesSorter(object):
     def get_sorted_variables(self):
         def get_sort_key(o):
             return o['name']
+
         self.variables.sort(key=get_sort_key)
         self.single_underscore.sort(key=get_sort_key)
         self.double_underscore.sort(key=get_sort_key)
@@ -649,6 +649,7 @@ class ModulesManager(object):
 class InternalsFilter(object):
     """Identifies debugger internal artifacts.
     """
+
     # TODO: Move the internal thread identifier here
     def __init__(self):
         if platform.system() == 'Windows':
@@ -699,6 +700,7 @@ class InternalsFilter(object):
 ########################
 # the debug config
 
+
 def bool_parser(str):
     return str in ("True", "true", "1")
 
@@ -716,7 +718,6 @@ DEBUG_OPTIONS_PARSER = {
     'WINDOWS_CLIENT': bool_parser,
     'DEBUG_STDLIB': bool_parser,
 }
-
 
 DEBUG_OPTIONS_BY_FLAG = {
     'RedirectOutput': 'REDIRECT_OUTPUT=True',
@@ -762,8 +763,7 @@ def _extract_debug_options(opts, flags=None):
 
 def _build_debug_options(flags):
     """Build string representation of debug options from the launch config."""
-    return ';'.join(DEBUG_OPTIONS_BY_FLAG[flag]
-                    for flag in flags or []
+    return ';'.join(DEBUG_OPTIONS_BY_FLAG[flag] for flag in flags or []
                     if flag in DEBUG_OPTIONS_BY_FLAG)
 
 
@@ -794,7 +794,7 @@ def _parse_debug_options(opts):
             continue
 
     if 'WINDOWS_CLIENT' not in options:
-        options['WINDOWS_CLIENT'] = platform.system() == 'Windows' # noqa
+        options['WINDOWS_CLIENT'] = platform.system() == 'Windows'  # noqa
 
     return options
 
@@ -808,9 +808,12 @@ def _parse_debug_options(opts):
 class VSCodeMessageProcessorBase(ipcjson.SocketIO, ipcjson.IpcChannel):
     """The base class for VSC message processors."""
 
-    def __init__(self, socket, notify_closing,
-                 timeout=None, logfile=None, own_socket=False
-                 ):
+    def __init__(self,
+                 socket,
+                 notify_closing,
+                 timeout=None,
+                 logfile=None,
+                 own_socket=False):
         super(VSCodeMessageProcessorBase, self).__init__(
             socket=socket,
             own_socket=False,
@@ -868,6 +871,7 @@ class VSCodeMessageProcessorBase(ipcjson.SocketIO, ipcjson.IpcChannel):
 
         # VSC msg processing loop
         def process_messages():
+            debug('7.start')
             self.readylock.acquire()
             with self._connlock:
                 self._listening = threading.Lock()
@@ -879,6 +883,7 @@ class VSCodeMessageProcessorBase(ipcjson.SocketIO, ipcjson.IpcChannel):
                     _util.lock_release(self._listening)
                     _util.lock_release(self._connected)
                 self.close()
+
         self.server_thread = _util.new_hidden_thread(
             target=process_messages,
             name=threadname,
@@ -916,11 +921,7 @@ class VSCodeMessageProcessorBase(ipcjson.SocketIO, ipcjson.IpcChannel):
     # VSC protocol handlers
 
     def send_error_response(self, request, message=None):
-        self.send_response(
-            request,
-            success=False,
-            message=message
-        )
+        self.send_response(request, success=False, message=message)
 
     # internal methods
 
@@ -990,11 +991,17 @@ class VSCLifecycleMsgProcessor(VSCodeMessageProcessorBase):
 
     EXITWAIT = 1
 
-    def __init__(self, socket,
-                 notify_disconnecting, notify_closing,
-                 notify_launch=None, notify_ready=None,
-                 timeout=None, logfile=None, debugging=True,
-                 ):
+    def __init__(
+            self,
+            socket,
+            notify_disconnecting,
+            notify_closing,
+            notify_launch=None,
+            notify_ready=None,
+            timeout=None,
+            logfile=None,
+            debugging=True,
+    ):
         super(VSCLifecycleMsgProcessor, self).__init__(
             socket=socket,
             notify_closing=notify_closing,
@@ -1016,6 +1023,7 @@ class VSCLifecycleMsgProcessor(VSCodeMessageProcessorBase):
         self._statelock = threading.Lock()
         self._debugging = debugging
         self._debuggerstopped = False
+        self._restart_session = False
         self._exitlock = threading.Lock()
         self._exitlock.acquire()  # released in handle_exiting()
         self._exiting = False
@@ -1036,6 +1044,7 @@ class VSCLifecycleMsgProcessor(VSCodeMessageProcessorBase):
             # make sure the exited event is sent first.
             self._wait_until_exiting(self.EXITWAIT)
             self._ensure_debugger_stopped()
+
         t = _util.new_hidden_thread(
             target=stop,
             name='stopping',
@@ -1071,6 +1080,7 @@ class VSCLifecycleMsgProcessor(VSCodeMessageProcessorBase):
 
     def on_initialize(self, request, args):
         # TODO: docstring
+        self._restart_session = False
         self.send_response(request, **INITIALIZE_RESPONSE)
         self.send_event('initialized')
 
@@ -1097,6 +1107,9 @@ class VSCLifecycleMsgProcessor(VSCodeMessageProcessorBase):
         self._notify_ready()
 
     def on_disconnect(self, request, args):
+        debug('on_disconnect')
+        self._restart_session = request.get('arguments',
+                                            {'restart': True})['restart'] # noqa
         # TODO: docstring
         if self._debuggerstopped:  # A "terminated" event must have been sent.
             self._wait_until_exiting(self.EXITWAIT)
@@ -1121,9 +1134,8 @@ class VSCLifecycleMsgProcessor(VSCodeMessageProcessorBase):
             if self.start_reason == 'attach':
                 if not self._debuggerstopped:
                     self._handle_detach()
-        self._notify_disconnecting(
-            pre_socket_close=finish_disconnect,
-        )
+
+        self._notify_disconnecting(pre_socket_close=finish_disconnect, )
         # The callback might never get called in notify_disconnecting,
         # so we call it again here to make sure it is called.
         finish_disconnect()
@@ -1143,6 +1155,8 @@ class VSCLifecycleMsgProcessor(VSCodeMessageProcessorBase):
             if self._debuggerstopped:
                 return
             self._debuggerstopped = True
+        if self._restart_session:
+            return
         self.send_event('terminated')
 
     def _wait_until_exiting(self, timeout):
@@ -1186,11 +1200,17 @@ class VSCodeMessageProcessor(VSCLifecycleMsgProcessor):
     protocol.
     """
 
-    def __init__(self, socket, pydevd_notify, pydevd_request,
-                 notify_debugger_ready,
-                 notify_disconnecting, notify_closing,
-                 timeout=None, logfile=None,
-                 ):
+    def __init__(
+            self,
+            socket,
+            pydevd_notify,
+            pydevd_request,
+            notify_debugger_ready,
+            notify_disconnecting,
+            notify_closing,
+            timeout=None,
+            logfile=None,
+    ):
         super(VSCodeMessageProcessor, self).__init__(
             socket=socket,
             notify_disconnecting=notify_disconnecting,
@@ -1296,6 +1316,7 @@ class VSCodeMessageProcessor(VSCLifecycleMsgProcessor):
             def decorate(f):
                 self[cmd_id] = f
                 return f
+
             return decorate
 
     pydevd_events = EventHandlers()
@@ -1326,6 +1347,7 @@ class VSCodeMessageProcessor(VSCLifecycleMsgProcessor):
             with provider.using_format(fmt):
                 yield
             provider._lock.release()
+
         yield futures.Result(context())
 
     def _wait_for_pydevd_ready(self):
@@ -1426,9 +1448,8 @@ class VSCodeMessageProcessor(VSCLifecycleMsgProcessor):
 
     def _send_cmd_version_command(self):
         cmd = pydevd_comm.CMD_VERSION
-        windows_client = self.debug_options.get(
-            'WINDOWS_CLIENT',
-            platform.system() == 'Windows')
+        windows_client = self.debug_options.get('WINDOWS_CLIENT',
+                                                platform.system() == 'Windows')
         os_id = 'WINDOWS' if windows_client else 'UNIX'
         msg = '1.1\t{}\tID'.format(os_id)
         return self.pydevd_request(cmd, msg)
@@ -1515,14 +1536,14 @@ class VSCodeMessageProcessor(VSCLifecycleMsgProcessor):
                 if not is_debugger_internal_thread(name):
                     pyd_tid = xthread['id']
                     try:
-                        vsc_tid = self.thread_map.to_vscode(pyd_tid,
-                                                            autogen=False)
+                        vsc_tid = self.thread_map.to_vscode(
+                            pyd_tid, autogen=False)
                     except KeyError:
                         # This is a previously unseen thread
-                        vsc_tid = self.thread_map.to_vscode(pyd_tid,
-                                                            autogen=True)
-                        self.send_event('thread', reason='started',
-                                        threadId=vsc_tid)
+                        vsc_tid = self.thread_map.to_vscode(
+                            pyd_tid, autogen=True)
+                        self.send_event(
+                            'thread', reason='started', threadId=vsc_tid)
 
                     threads.append({'id': vsc_tid, 'name': name})
 
@@ -1559,9 +1580,10 @@ class VSCodeMessageProcessor(VSCLifecycleMsgProcessor):
             for local_prefix, remote_prefix in pydevd_file_utils.PATHS_FROM_ECLIPSE_TO_PYTHON:  # noqa
                 if local_prefix != remote_prefix:
                     continue
-                if filename.startswith(local_prefix): # noqa
+                if filename.startswith(local_prefix):  # noqa
                     return 0
-                if platform.system() == 'Windows' and filename.upper().startswith(local_prefix.upper()): # noqa
+                if platform.system() == 'Windows' and filename.upper(
+                ).startswith(local_prefix.upper()):  # noqa
                     return 0
 
         client_filename = pydevd_file_utils.norm_file_to_client(filename)
@@ -1616,19 +1638,16 @@ class VSCodeMessageProcessor(VSCLifecycleMsgProcessor):
             fid = self.frame_map.to_vscode(key, autogen=True)
             name = unquote(xframe['name'])
             # pydevd encodes if necessary and then uses urllib.quote.
-            norm_path = self.path_casing.un_normcase(unquote(str(xframe['file'])))  # noqa
+            norm_path = self.path_casing.un_normcase(
+                unquote(str(xframe['file'])))  # noqa
             source_reference = self.get_source_reference(norm_path)
             if not self.internals_filter.is_internal_path(norm_path):
                 module = self.modules_mgr.add_or_get_from_path(norm_path)
             else:
                 module = None
             line = int(xframe['line'])
-            frame_name = self._format_frame_name(
-                fmt,
-                name,
-                module,
-                line,
-                norm_path)
+            frame_name = self._format_frame_name(fmt, name, module, line,
+                                                 norm_path)
 
             stackFrames.append({
                 'id': fid,
@@ -1637,19 +1656,19 @@ class VSCodeMessageProcessor(VSCLifecycleMsgProcessor):
                     'path': norm_path,
                     'sourceReference': source_reference
                 },
-                'line': line, 'column': 1,
+                'line': line,
+                'column': 1,
             })
 
         user_frames = []
         for frame in stackFrames:
             if not self.internals_filter.is_internal_path(
-                frame['source']['path']):
+                    frame['source']['path']):
                 user_frames.append(frame)
 
         totalFrames = len(user_frames)
-        self.send_response(request,
-                           stackFrames=user_frames,
-                           totalFrames=totalFrames)
+        self.send_response(
+            request, stackFrames=user_frames, totalFrames=totalFrames)
 
     def _format_frame_name(self, fmt, name, module, line, path):
         frame_name = name
@@ -1734,7 +1753,7 @@ class VSCodeMessageProcessor(VSCLifecycleMsgProcessor):
                 var['presentationHint'] = {'attributes': ['rawString']}
 
             if bool(xvar['isContainer']):
-                pyd_child = pyd_var + (var_name,)
+                pyd_child = pyd_var + (var_name, )
                 var['variablesReference'] = self.var_map.to_vscode(
                     pyd_child, autogen=True)
 
@@ -1757,7 +1776,7 @@ class VSCodeMessageProcessor(VSCLifecycleMsgProcessor):
             # This means the current variable has a parent i.e, it is not a
             # FRAME variable. These require evaluateName to work in VS
             # watch window
-            var = pyd_var_parent + (var_name,)
+            var = pyd_var_parent + (var_name, )
             eval_name = var[3]
             for s in var[4:]:
                 try:
@@ -1817,7 +1836,7 @@ class VSCodeMessageProcessor(VSCLifecycleMsgProcessor):
         # VSC gives us variablesReference to the parent of the variable
         # being set, and variable name; but pydevd wants the ID
         # (or rather path) of the variable itself.
-        pyd_var += (var_name,)
+        pyd_var += (var_name, )
         vsc_var = self.var_map.to_vscode(pyd_var, autogen=True)
 
         cmd_args = [pyd_tid, pyd_fid, 'LOCAL', expr, '1']
@@ -1870,8 +1889,7 @@ class VSCodeMessageProcessor(VSCLifecycleMsgProcessor):
         msg = '\t'.join(str(s) for s in cmd_args)
         with (yield self.using_format(fmt)):
             _, _, resp_args = yield self.pydevd_request(
-                pydevd_comm.CMD_EVALUATE_EXPRESSION,
-                msg)
+                pydevd_comm.CMD_EVALUATE_EXPRESSION, msg)
 
         try:
             xml = self.parse_xml_response(resp_args)
@@ -1888,18 +1906,14 @@ class VSCodeMessageProcessor(VSCLifecycleMsgProcessor):
         context = args.get('context', '')
         is_eval_error = xvar['isErrorOnEval']
         if context == 'hover' and is_eval_error == 'True':
-            self.send_response(
-                request,
-                result=None,
-                variablesReference=0)
+            self.send_response(request, result=None, variablesReference=0)
             return
 
         if context == 'repl' and is_eval_error == 'True':
             # try exec for repl requests
             with (yield self.using_format(fmt)):
                 _, _, resp_args = yield self.pydevd_request(
-                    pydevd_comm.CMD_EXEC_EXPRESSION,
-                    msg)
+                    pydevd_comm.CMD_EXEC_EXPRESSION, msg)
             try:
                 xml2 = self.parse_xml_response(resp_args)
                 xvar2 = xml2.var
@@ -1911,8 +1925,7 @@ class VSCodeMessageProcessor(VSCLifecycleMsgProcessor):
                 result = unquote(xvar['value'])
             self.send_response(
                 request,
-                result=(None
-                        if result == 'None' and result_type == 'NoneType'
+                result=(None if result == 'None' and result_type == 'NoneType'
                         else result),
                 type=result_type,
                 variablesReference=0,
@@ -1954,9 +1967,7 @@ class VSCodeMessageProcessor(VSCLifecycleMsgProcessor):
         cmd_args = (pyd_tid, pyd_fid, 'LOCAL', expr, '1')
         msg = '\t'.join(str(s) for s in cmd_args)
         with (yield self.using_format(fmt)):
-            yield self.pydevd_request(
-                pydevd_comm.CMD_EXEC_EXPRESSION,
-                msg)
+            yield self.pydevd_request(pydevd_comm.CMD_EXEC_EXPRESSION, msg)
 
         # Return 'None' here, VS will call getVariables to retrieve
         # updated values anyway. Doing eval on the left-hand-side
@@ -1970,9 +1981,8 @@ class VSCodeMessageProcessor(VSCLifecycleMsgProcessor):
         for module in modules:
             if not self.internals_filter.is_internal_path(module['path']):
                 user_modules.append(module)
-        self.send_response(request,
-                           modules=user_modules,
-                           totalModules=len(user_modules))
+        self.send_response(
+            request, modules=user_modules, totalModules=len(user_modules))
 
     @async_handler
     def on_pause(self, request, args):
@@ -2080,15 +2090,14 @@ class VSCodeMessageProcessor(VSCLifecycleMsgProcessor):
         cmd = pydevd_comm.CMD_SET_BREAK
         msgfmt = '{}\t{}\t{}\t{}\tNone\t{}\t{}\t{}\t{}'
         if needs_unicode(path):
-            msgfmt = unicode(msgfmt)   # noqa
+            msgfmt = unicode(msgfmt)  # noqa
         for src_bp in src_bps:
             line = src_bp['line']
-            vsc_bpid = self.bp_map.add(
-                    lambda vsc_bpid: (path, vsc_bpid))
+            vsc_bpid = self.bp_map.add(lambda vsc_bpid: (path, vsc_bpid))
             self.path_casing.track_file_path_case(path)
 
             hit_condition = self._get_hit_condition_expression(
-                                src_bp.get('hitCondition', None))
+                src_bp.get('hitCondition', None))
             logMessage = src_bp.get('logMessage', '')
             if len(logMessage) == 0:
                 is_logpoint = None
@@ -2099,12 +2108,16 @@ class VSCodeMessageProcessor(VSCLifecycleMsgProcessor):
                 condition = None
                 expressions = re.findall('\{.*?\}', logMessage)
                 if len(expressions) == 0:
-                    expression = '{}'.format(repr(logMessage)) # noqa
+                    expression = '{}'.format(repr(logMessage))  # noqa
                 else:
-                    raw_text = reduce(lambda a, b: a.replace(b, '{}'), expressions, logMessage) # noqa
+                    raw_text = reduce(lambda a, b: a.replace(b, '{}'),
+                                      expressions, logMessage)  # noqa
                     raw_text = raw_text.replace('"', '\\"')
-                    expression_list = ', '.join([s.strip('{').strip('}').strip() for s in expressions]) # noqa
-                    expression = '"{}".format({})'.format(raw_text, expression_list) # noqa
+                    expression_list = ', '.join([
+                        s.strip('{').strip('}').strip() for s in expressions
+                    ])  # noqa
+                    expression = '"{}".format({})'.format(
+                        raw_text, expression_list)  # noqa
 
             msg = msgfmt.format(vsc_bpid, bp_type, path, line, condition,
                                 expression, hit_condition, is_logpoint)
@@ -2127,15 +2140,16 @@ class VSCodeMessageProcessor(VSCLifecycleMsgProcessor):
         jmc = self._is_just_my_code_stepping_enabled()
 
         if exception_options:
-            self.exceptions_mgr.apply_exception_options(
-                exception_options, jmc)
+            self.exceptions_mgr.apply_exception_options(exception_options, jmc)
         else:
             self.exceptions_mgr.remove_all_exception_breaks()
             break_raised = 'raised' in filters
             break_uncaught = 'uncaught' in filters
             if break_raised or break_uncaught:
                 self.exceptions_mgr.add_exception_break(
-                    'BaseException', break_raised, break_uncaught,
+                    'BaseException',
+                    break_raised,
+                    break_uncaught,
                     skip_stdlib=jmc)
         self.send_response(request)
 
@@ -2148,17 +2162,18 @@ class VSCodeMessageProcessor(VSCLifecycleMsgProcessor):
                 exc = self.active_exceptions[pyd_tid]
             except KeyError:
                 exc = ExceptionInfo('BaseException',
-                                    'exception: no description',
-                                    None, None)
+                                    'exception: no description', None, None)
         self.send_response(
             request,
             exceptionId=exc.name,
             description=exc.description,
             breakMode=self.exceptions_mgr.get_break_mode(exc.name),
-            details={'typeName': exc.name,
-                     'message': exc.description,
-                     'stackTrace': exc.stack,
-                     'source': exc.source},
+            details={
+                'typeName': exc.name,
+                'message': exc.description,
+                'stackTrace': exc.stack,
+                'source': exc.source
+            },
         )
 
     # Custom ptvsd message
@@ -2177,12 +2192,8 @@ class VSCodeMessageProcessor(VSCLifecycleMsgProcessor):
                 impl_desc = None
 
         def version_str(v):
-            return '{}.{}.{}{}{}'.format(
-                v.major,
-                v.minor,
-                v.micro,
-                v.releaselevel,
-                v.serial)
+            return '{}.{}.{}{}{}'.format(v.major, v.minor, v.micro,
+                                         v.releaselevel, v.serial)
 
         try:
             impl_name = sys.implementation.name
@@ -2258,11 +2269,9 @@ class VSCodeMessageProcessor(VSCLifecycleMsgProcessor):
                 # Any internal pydevd or ptvsd threads will be ignored
                 # everywhere
                 try:
-                    tid = self.thread_map.to_vscode(pyd_tid,
-                                                    autogen=False)
+                    tid = self.thread_map.to_vscode(pyd_tid, autogen=False)
                 except KeyError:
-                    tid = self.thread_map.to_vscode(pyd_tid,
-                                                    autogen=True)
+                    tid = self.thread_map.to_vscode(pyd_tid, autogen=True)
                     self.send_event('thread', reason='started', threadId=tid)
 
     @pydevd_events.handler(pydevd_comm.CMD_THREAD_KILL)
@@ -2285,10 +2294,10 @@ class VSCodeMessageProcessor(VSCLifecycleMsgProcessor):
         pyd_tid = xml.thread['id']
         reason = int(xml.thread['stop_reason'])
         STEP_REASONS = {
-                pydevd_comm.CMD_STEP_INTO,
-                pydevd_comm.CMD_STEP_OVER,
-                pydevd_comm.CMD_STEP_RETURN,
-                pydevd_comm.CMD_STEP_INTO_MY_CODE,
+            pydevd_comm.CMD_STEP_INTO,
+            pydevd_comm.CMD_STEP_OVER,
+            pydevd_comm.CMD_STEP_RETURN,
+            pydevd_comm.CMD_STEP_INTO_MY_CODE,
         }
         EXCEPTION_REASONS = {
             pydevd_comm.CMD_STEP_CAUGHT_EXCEPTION,
@@ -2335,8 +2344,8 @@ class VSCodeMessageProcessor(VSCLifecycleMsgProcessor):
             # Get exception info from frame
             try:
                 pyd_fid = xframe['id']
-                cmdargs = '{}\t{}\tFRAME\t__exception__'.format(pyd_tid,
-                                                                pyd_fid)
+                cmdargs = '{}\t{}\tFRAME\t__exception__'.format(
+                    pyd_tid, pyd_fid)
                 cmdid = pydevd_comm.CMD_GET_VARIABLE
                 _, _, resp_args = yield self.pydevd_request(cmdid, cmdargs)
                 xml = self.parse_xml_response(resp_args)
@@ -2351,13 +2360,13 @@ class VSCodeMessageProcessor(VSCLifecycleMsgProcessor):
                         if _util.is_py34():
                             # NOTE: In 3.4.* format_list requires the text
                             # to be passed in the tuple list.
-                            line_text = _util.get_line_for_traceback(file_path,
-                                                                     line_no)
-                            frame_data.append((file_path, line_no,
-                                               func_name, line_text))
+                            line_text = _util.get_line_for_traceback(
+                                file_path, line_no)
+                            frame_data.append((file_path, line_no, func_name,
+                                               line_text))
                         else:
-                            frame_data.append((file_path, line_no,
-                                               func_name, None))
+                            frame_data.append((file_path, line_no, func_name,
+                                               None))
                 stack = ''.join(traceback.format_list(frame_data))
                 source = unquote(xframe['file'])
                 if self.internals_filter.is_internal_path(source):
@@ -2369,10 +2378,8 @@ class VSCodeMessageProcessor(VSCLifecycleMsgProcessor):
                 source = None
 
             with self.active_exceptions_lock:
-                self.active_exceptions[pyd_tid] = ExceptionInfo(text,
-                                                                description,
-                                                                stack,
-                                                                source)
+                self.active_exceptions[pyd_tid] = ExceptionInfo(
+                    text, description, stack, source)
 
         self.send_event(
             'stopped',
