@@ -123,6 +123,14 @@ def get_c_option_index(args):
 
 
 def patch_args(args):
+    patched_args = _patch_args(args)
+    patched_args[3] = '9898'
+    # print('args have been patched:')
+    # print(patched_args)
+    return patched_args
+
+
+def _patch_args(args):
     try:
         log_debug("Patching args: %s"% str(args))
         args = remove_quotes_from_args(args)
@@ -494,6 +502,7 @@ def create_fork(original_name):
 
 def send_process_created_message():
     debugger = get_global_debugger()
+    # print('send_process_created_message')
     if debugger is not None:
         debugger.send_process_created_message()
 

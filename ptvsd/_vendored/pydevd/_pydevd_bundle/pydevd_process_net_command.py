@@ -19,7 +19,8 @@ from _pydevd_bundle.pydevd_comm import CMD_RUN, CMD_VERSION, CMD_LIST_THREADS, C
     CMD_EVALUATE_CONSOLE_EXPRESSION, InternalEvaluateConsoleExpression, InternalConsoleGetCompletions, \
     CMD_RUN_CUSTOM_OPERATION, InternalRunCustomOperation, CMD_IGNORE_THROWN_EXCEPTION_AT, CMD_ENABLE_DONT_TRACE, \
     CMD_SHOW_RETURN_VALUES, ID_TO_MEANING, CMD_GET_DESCRIPTION, InternalGetDescription, InternalLoadFullValue, \
-    CMD_LOAD_FULL_VALUE, CMD_REDIRECT_OUTPUT, CMD_GET_NEXT_STATEMENT_TARGETS, InternalGetNextStatementTargets, CMD_SET_PROJECT_ROOTS
+    CMD_LOAD_FULL_VALUE, CMD_REDIRECT_OUTPUT, CMD_GET_NEXT_STATEMENT_TARGETS, InternalGetNextStatementTargets, CMD_SET_PROJECT_ROOTS, \
+    CMD_GET_PROC_ID
 from _pydevd_bundle.pydevd_constants import get_thread_id, IS_PY3K, DebugInfoHolder, dict_keys, STATE_RUN, \
     NEXT_VALUE_SEPARATOR
 from _pydevd_bundle.pydevd_additional_thread_info import set_additional_thread_info
@@ -493,6 +494,12 @@ def process_net_command(py_db, cmd_id, seq, text):
                     finally:
                         f.close()
                     cmd = py_db.cmd_factory.make_get_file_contents(seq, source)
+
+            elif cmd_id == CMD_GET_PROC_ID:
+                # print('processing process id req1')
+
+                cmd = py_db.cmd_factory.make_get_process_id(seq, str(os.getpid()))
+                # print('processing process id req2')
 
             elif cmd_id == CMD_SET_PROPERTY_TRACE:
                 # Command which receives whether to trace property getter/setter/deleter

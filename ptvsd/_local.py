@@ -9,6 +9,7 @@ from ptvsd.socket import Address
 
 PYDEVD_DEFAULTS = {
     '--qt-support=auto',
+    '--multiprocess',
 }
 
 

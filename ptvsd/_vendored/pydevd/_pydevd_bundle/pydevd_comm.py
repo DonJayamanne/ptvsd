@@ -174,6 +174,7 @@ CMD_LOAD_FULL_VALUE = 151
 CMD_REDIRECT_OUTPUT = 200
 CMD_GET_NEXT_STATEMENT_TARGETS = 201
 CMD_SET_PROJECT_ROOTS = 202
+CMD_GET_PROC_ID = 203
 
 CMD_VERSION = 501
 CMD_RETURN = 502
@@ -236,6 +237,8 @@ ID_TO_MEANING = {
 
     '200': 'CMD_REDIRECT_OUTPUT',
     '201': 'CMD_GET_NEXT_STATEMENT_TARGETS',
+    '202': 'CMD_SET_PROJECT_ROOTS',
+    '203': 'CMD_GET_PROC_ID',
 
     '501': 'CMD_VERSION',
     '502': 'CMD_RETURN',
@@ -356,15 +359,22 @@ class ReaderThread(PyDBDaemonThread):
         self._stop_trace()
         read_buffer = ""
         try:
-
+            # print('def _on_run(self):')
+            # with open('/Users/donjayamanne/Desktop/Development/PythonStuff/vscodePythonTesting/dbg/log.log', 'a') as fs:
+            #     fs.write('\n{} in proc {}'.format('inside on_run', os.getpid()))
             while not self.killReceived:
                 try:
                     r = self.sock.recv(1024)
                 except:
+                    # with open('/Users/donjayamanne/Desktop/Development/PythonStuff/vscodePythonTesting/dbg/log.log', 'a') as fs:
+                    #     fs.write('\n{} Oopsy in proc {}'.format('inside on_run', os.getpid()))
                     if not self.killReceived:
                         traceback.print_exc()
                         self.handle_except()
                     return #Finished communication.
+
+                # with open('/Users/donjayamanne/Desktop/Development/PythonStuff/vscodePythonTesting/dbg/log.log', 'a') as fs:
+                #     fs.write('\nreceievd data in in proc {}'.format(os.getpid()))
 
                 #Note: the java backend is always expected to pass utf-8 encoded strings. We now work with unicode
                 #internally and thus, we may need to convert to the actual encoding where needed (i.e.: filenames
@@ -378,6 +388,8 @@ class ReaderThread(PyDBDaemonThread):
                     sys.stderr.flush()
 
                 if len(read_buffer) == 0:
+                    # with open('/Users/donjayamanne/Desktop/Development/PythonStuff/vscodePythonTesting/dbg/log.log', 'a') as fs:
+                    #     fs.write('\n{} handle_except in proc'.format(os.getpid()))
                     self.handle_except()
                     break
                 while read_buffer.find(u'\n') != -1:
@@ -387,8 +399,13 @@ class ReaderThread(PyDBDaemonThread):
                     try:
                         cmd_id = int(args[0])
                         pydev_log.debug('Received command: %s %s\n' % (ID_TO_MEANING.get(str(cmd_id), '???'), command,))
+                        # print('Received command: %s %s\n' % (ID_TO_MEANING.get(str(cmd_id), '???'), command,))
+                        # with open('/Users/donjayamanne/Desktop/Development/PythonStuff/vscodePythonTesting/dbg/log.log', 'a') as fs:
+                        #     fs.write('\n' + str(os.getpid()) + ':Received command: %s %s\n' % (ID_TO_MEANING.get(str(cmd_id), '???'), command,))
                         self.process_command(cmd_id, int(args[1]), args[2])
                     except:
+                        # with open('/Users/donjayamanne/Desktop/Development/PythonStuff/vscodePythonTesting/dbg/log.log', 'a') as fs:
+                        #     fs.write('\n' + str(os.getpid()) + ':{} damn in proc {}'.format('inside on_run', os.getpid()))
                         traceback.print_exc()
                         sys.stderr.write("Can't process net command: %s\n" % command)
                         sys.stderr.flush()
@@ -784,6 +801,12 @@ class NetCommandFactory:
     def make_get_file_contents(self, seq, payload):
         try:
             return NetCommand(CMD_GET_FILE_CONTENTS, seq, payload)
+        except Exception:
+            return self.make_error_message(seq, get_exception_traceback_str())
+
+    def make_get_process_id(self, seq, payload):
+        try:
+            return NetCommand(CMD_GET_PROC_ID, seq, payload)
         except Exception:
             return self.make_error_message(seq, get_exception_traceback_str())
 

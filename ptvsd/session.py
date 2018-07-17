@@ -1,5 +1,5 @@
 from .socket import is_socket, close_socket
-from .wrapper import VSCodeMessageProcessor
+from .wrapper import VSCodeMessageProcessor, set_VSCodeMessageProcessor_instance
 from ._util import TimeoutError, ClosedError, Closeable, Startable, debug
 
 
@@ -110,6 +110,9 @@ class DebugSession(Startable, Closeable):
     def _start(self, threadname, **kwargs):
         """Start the message handling for the session."""
         self._msgprocessor = self._new_msg_processor(**kwargs)
+        # print('start Session')
+        set_VSCodeMessageProcessor_instance(self._msgprocessor)
+        # print(hasattr(self._msgprocessor, 'on_pydevd_event'))
         self.add_resource_to_close(self._msgprocessor)
         self._msgprocessor.start(threadname)
         return self._msgprocessor_running
