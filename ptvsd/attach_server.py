@@ -8,7 +8,7 @@ import pydevd
 
 # TODO: Why import run_module & run_file?
 from ptvsd._local import run_module, run_file  # noqa
-from ptvsd._remote import enable_attach as ptvsd_enable_attach
+from ptvsd._remote import enable_attach as ptvsd_enable_attach, attach as ptvsd_attach
 
 
 DEFAULT_HOST = '0.0.0.0'
@@ -70,6 +70,20 @@ def enable_attach(address=(DEFAULT_HOST, DEFAULT_PORT), redirect_output=True):
         on_attach=_attached.set,
         redirect_output=redirect_output,
     )
+
+
+def attach(address=(DEFAULT_HOST, DEFAULT_PORT), redirect_output=True):
+    global _enabled
+    if _enabled:
+        return
+    _enabled = True
+    _attached.clear()
+
+    ptvsd_attach(
+        address,
+        redirect_output=redirect_output,
+    )
+    _attached.set()
 
 # TODO: Add disable_attach()?
 

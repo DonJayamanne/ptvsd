@@ -4,7 +4,7 @@
 
 __all__ = [
     '__version__', '__author__',
-    'enable_attach', 'wait_for_attach', 'break_into_debugger', 'is_attached',
+    'enable_attach', 'wait_for_attach', 'break_into_debugger', 'is_attached', 'attach   '
 ]
 
 
@@ -13,6 +13,6 @@ __all__ = [
 from ._vendored import force_pydevd
 from ptvsd.version import __version__, __author__
 from ptvsd.attach_server import (
-    enable_attach, wait_for_attach, break_into_debugger, is_attached,
+    enable_attach, wait_for_attach, break_into_debugger, is_attached, attach
 )
 del force_pydevd
